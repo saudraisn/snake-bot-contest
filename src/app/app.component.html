@@ -27,12 +27,13 @@
 <div class="main">
   <h1>Athennian's {{title}}</h1>
 
-  <!-- <input type="file" name="p1">
-  <input type="file" name="p2"> -->
-  <button (click)='play()'>PLAY</button>
-  <button (click)='gameLoop()'>LOOP 1</button>
-  <button (click)='stop()'>STOP</button>
-  <button (click)='reset()'>RESET</button>
+  <input type="file" (change)="loadPlayer($event, 0)" name="p1">
+  <input type="file" (change)="loadPlayer($event, 1)" name="p2">
+
+  <button type="" (click)='play()'>PLAY</button>
+  <button type="" (click)='gameLoop()'>LOOP 1</button>
+  <button type="" (click)='stop()'>STOP</button>
+  <button type="" (click)='reset()'>RESET</button>
 
 
   <div class="board">

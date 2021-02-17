@@ -38,7 +38,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const moves = this.players.map(p => p.nextStep(cloneDeep(this.game)))
 
     // Bypass with manual mode
-    moves[0].move = this.command
+    // moves[0].move = this.commands
 
     moves.forEach((move, index) => {
       if (!move) {
@@ -100,7 +100,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.players[0].init('p1')
     this.players[1].init('p2')
 
-    this.seedRandomApples(5)
+    this.seedRandomApples(25)
     // this.snake = []
     // this.command = 'RIGHT'
     this.gameOver = false
@@ -223,6 +223,27 @@ export class AppComponent implements OnInit, OnDestroy {
           break
       }
     })
+    this.reset()
+  }
+
+  loadPlayer(e, playerIndex:number) {
+      const file = e.target.files[0];
+      if(file) {
+        let fileReader = new FileReader();
+        fileReader.onload = (e) => {
+          console.log(fileReader.result);
+  
+          const p1 = eval(fileReader.result as string)
+          console.log('Loaded player: ', p1)
+          this.players[playerIndex] = p1
+          this.players[playerIndex].id = this.game.snakes[playerIndex].id
+        }
+        fileReader.readAsText(file);
+      } else {
+        console.log('New dummy player')
+        this.players[playerIndex] = new Player()
+        this.players[playerIndex].id = this.game.snakes[playerIndex].id
+      }
   }
 
   ngOnDestroy() {
