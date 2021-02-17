@@ -7,6 +7,7 @@ export interface GameState {
   W:number
   H:number
   snakes: Snake[]
+  apples: Position[]
 }
 
 export interface PlayerInfo {

@@ -18,8 +18,8 @@
   .board-cell {
     border-bottom: 1px solid white;
     border-right: 1px solid white;
-    width:20px;
-    height:20px;
+    width:30px;
+    height:30px;
     background-color: black;
   }
 </style>
@@ -30,6 +30,7 @@
   <!-- <input type="file" name="p1">
   <input type="file" name="p2"> -->
   <button (click)='play()'>PLAY</button>
+  <button (click)='gameLoop()'>LOOP 1</button>
   <button (click)='stop()'>STOP</button>
   <button (click)='reset()'>RESET</button>
 
@@ -37,7 +38,7 @@
   <div class="board">
     <div class="board-col" *ngFor="let row of grid">
       <div class="board-cell" style="background-color: {{cell?.color || 'black'}};" *ngFor="let cell of row">
-
+        <img *ngIf="cell.img" src="{{cell.img}}" alt="" style="width: 100%; height:100%; object-fit: cover;">
       </div>
     </div>
 

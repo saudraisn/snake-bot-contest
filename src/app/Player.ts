@@ -1,14 +1,6 @@
 import { last } from "lodash";
-import { isEqual } from "./helpers";
+import { isEqual, randomElem } from "./helpers";
 import { GameState, GameMove, PlayerInfo, Position } from "./Types";
-
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function randomElem(arr: any[]) {
-  return arr[randomInt(0, arr.length - 1)]
-}
 
 export class Player {
   id
@@ -42,7 +34,7 @@ export class Player {
     if (this.validatePos(right, game)) {
       possibleMoves.push({ move: 'RIGHT' })
     }
-    return randomElem(possibleMoves)
+    return randomElem(possibleMoves) || {move : 'RIGHT'}
   }
 
   validatePos(pos: Position, game: GameState) {

@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { last, cloneDeep } from 'lodash'
-import { isEqual } from './helpers';
+import { getRandomPos, isEqual } from './helpers';
 import { Player } from './Player';
 import { Direction, GameMove, GameState, GridCell, Position } from './Types';
 
@@ -22,11 +22,13 @@ export class AppComponent implements OnInit, OnDestroy {
   game: GameState = {
     W: this.W,
     H: this.H,
-    snakes: []
+    snakes: [],
+    apples: []
   }
 
   grid: GridCell[][] = []
   interval: number;
+  command: Direction;
 
   gameLoop() {
     if (this.gameOver) {
@@ -35,37 +37,30 @@ export class AppComponent implements OnInit, OnDestroy {
 
     const moves = this.players.map(p => p.nextStep(cloneDeep(this.game)))
 
+    // Bypass with manual mode
+    moves[0].move = this.command
+
     moves.forEach((move, index) => {
-      if(!move) {
+      if (!move) {
         // TODO: Kill snake, because he didn't return a valid move.
         return
       }
+
       const snake = this.game.snakes[index]
       const command = move.move
-      if(!snake.isAlive) {
+      if (!snake.isAlive) {
         return
       }
 
       const head = last(snake.body)
-      let pos
-      switch (command) {
-        case 'UP':
-          pos = { x: head.x, y: head.y - 1 }
-          break
-        case 'DOWN':
-          pos = { x: head.x, y: head.y + 1 }
-          break
-        case 'LEFT':
-          pos = { x: head.x - 1, y: head.y }
-          break
-        case 'RIGHT':
-          pos = { x: head.x + 1, y: head.y }
-          break
-        default:
-          break
-      }
+      const pos = this.getNextPos(head, command)
 
-      if (this.validadePos(pos)) {
+      if(this.applesContain(pos)) {
+        // snake eats an apple, do not remove one block
+        snake.body.push(pos)
+        this.game.apples = this.game.apples.filter(a => !isEqual(a, pos))
+      }
+      else if (this.validadePos(pos)) {
         snake.body.push(pos)
         snake.body.shift()
       } else {
@@ -80,27 +75,77 @@ export class AppComponent implements OnInit, OnDestroy {
     this.render()
   }
 
+  getNextPos(pos:Position, command:Direction) {
+    switch (command) {
+      case 'UP':
+        return { x: pos.x, y: pos.y - 1 }
+      case 'DOWN':
+        return { x: pos.x, y: pos.y + 1 }
+      case 'LEFT':
+        return { x: pos.x - 1, y: pos.y }
+      case 'RIGHT':
+        return { x: pos.x + 1, y: pos.y }
+      default:
+        return null
+    }
+  }
+
   reset() {
     this.game.snakes = []
-    this.game.snakes.push({ id: 'p1', color: 'blue', isAlive: true, body: [{ x: 0, y: 12 }, { x: 1, y: 12 }, { x: 2, y: 12 }, { x: 3, y: 12 }, { x: 4, y: 12 }, { x: 5, y: 12 }, { x: 6, y: 12 }] })
-    this.game.snakes.push({ id: 'p2', color: 'purple', isAlive: true, body: [{ x: 0, y: 2 }, { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }, { x: 5, y: 2 }, { x: 6, y: 2 }] })
+    this.game.apples = []
+    this.game.snakes.push({ id: 'p1', color: 'cyan', isAlive: true, body: [{ x: 0, y: 12 }, { x: 1, y: 12 }, { x: 2, y: 12 }, { x: 3, y: 12 }, { x: 4, y: 12 }, { x: 5, y: 12 }, { x: 6, y: 12 }] })
+    this.game.snakes.push({ id: 'p2', color: 'pink', isAlive: true, body: [{ x: 0, y: 2 }, { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }, { x: 5, y: 2 }, { x: 6, y: 2 }] })
 
     this.players = [new Player(), new Player()]
     this.players[0].init('p1')
     this.players[1].init('p2')
+
+    this.seedRandomApples(5)
     // this.snake = []
     // this.command = 'RIGHT'
     this.gameOver = false
     this.render()
   }
 
+  seedRandomApples(amount: number) {
+
+    let i = 0
+
+    while (i < amount) {
+      const pos = getRandomPos(this.game.W, this.game.H)
+      if (!this.snakesContain(pos) && !this.applesContain(pos)) {
+        this.game.apples.push(pos)
+        i++
+      }
+    }
+  }
+
+  snakesContain(pos: Position) {
+    return this.game.snakes.some(snake => snake.body.some(p => isEqual(p, pos)))
+  }
+
+  applesContain(pos: Position) {
+    return this.game.apples.some(apple => isEqual(apple, pos))
+  }
+
   validadePos(pos: Position) {
 
     let valid = true
+
+    if(!pos) {
+      return false
+    }
+
     if (pos.x < 0 || pos.y < 0 || pos.x >= this.W || pos.y >= this.H) {
       console.log('HIT A WALL!')
-      valid = false
+      return false
     }
+
+    if(this.snakesContain(pos)) {
+      console.log('Hit a snake')
+      return false
+    }
+
 
     // if (this.snake.some(p => isEqual(p, pos))) {
     //   console.log('Hit itself.')
@@ -127,11 +172,28 @@ export class AppComponent implements OnInit, OnDestroy {
           color: snake.color
         }
       })
-    }
-    )
+
+      const head = last(snake.body)
+      if(!snake.isAlive) {
+        this.grid[head.x][head.y] = {
+          color : snake.color,
+          img : 'https://image.flaticon.com/icons/png/512/2027/2027275.png'
+        }
+      } else {
+        this.grid[head.x][head.y] = {
+          color : snake.color,
+          img : 'https://image.flaticon.com/icons/png/512/25/25361.png'
+        }
+      }
+    })
+
+    this.game.apples.forEach(apple => {
+      this.grid[apple.x][apple.y] = { color: 'red' }
+    })
   }
 
   play() {
+    window.clearInterval(this.interval)
     this.interval = window.setInterval(this.gameLoop.bind(this), 200)
   }
 
@@ -142,25 +204,25 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit() {
 
     // // FOR live player
-    // document.addEventListener('keydown', e => {
-    //   console.log('PRESSED : ', e.key)
-    //   switch (e.key) {
-    //     case 'ArrowUp':
-    //       this.command = 'UP'
-    //       break
-    //     case 'ArrowDown':
-    //       this.command = 'DOWN'
-    //       break
-    //     case 'ArrowLeft':
-    //       this.command = 'LEFT'
-    //       break
-    //     case 'ArrowRight':
-    //       this.command = 'RIGHT'
-    //       break
-    //     default:
-    //       break
-    //   }
-    // })
+    document.addEventListener('keydown', e => {
+      console.log('PRESSED : ', e.key)
+      switch (e.key) {
+        case 'ArrowUp':
+          this.command = 'UP'
+          break
+        case 'ArrowDown':
+          this.command = 'DOWN'
+          break
+        case 'ArrowLeft':
+          this.command = 'LEFT'
+          break
+        case 'ArrowRight':
+          this.command = 'RIGHT'
+          break
+        default:
+          break
+      }
+    })
   }
 
   ngOnDestroy() {
