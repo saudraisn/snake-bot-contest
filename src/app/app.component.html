@@ -35,7 +35,6 @@
   <button type="" (click)='stop()'>STOP</button>
   <button type="" (click)='reset()'>RESET</button>
 
-
   <div class="board">
     <div class="board-col" *ngFor="let row of grid">
       <div class="board-cell" style="background-color: {{cell?.color || 'black'}};" *ngFor="let cell of row">

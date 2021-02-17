@@ -93,13 +93,17 @@ export class AppComponent implements OnInit, OnDestroy {
   reset(reinitPlayers = false) {
     this.game.snakes = []
     this.game.apples = []
-    this.game.snakes.push({ id: 'p1', color: 'cyan', isAlive: true, body: [{ x: 0, y: 12 }, { x: 1, y: 12 }, { x: 2, y: 12 }, { x: 3, y: 12 }, { x: 4, y: 12 }, { x: 5, y: 12 }, { x: 6, y: 12 }] })
-    this.game.snakes.push({ id: 'p2', color: 'pink', isAlive: true, body: [{ x: 0, y: 2 }, { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }, { x: 5, y: 2 }, { x: 6, y: 2 }] })
+    this.game.snakes.push({ id: 'p1', color: 'deepskyblue', isAlive: true, body: [{ x: 0, y: 12 }, { x: 1, y: 12 }, { x: 2, y: 12 }, { x: 3, y: 12 }, { x: 4, y: 12 }, { x: 5, y: 12 }, { x: 6, y: 12 }] })
+    this.game.snakes.push({ id: 'p2', color: 'crimson', isAlive: true, body: [{ x: 12, y: 0 }, { x: 12, y: 1 }, { x: 12, y: 2 }, { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 }, { x: 12, y: 6 }] })
+    this.game.snakes.push({ id: 'p3', color: 'mediumaquamarine', isAlive: true, body: [{ x: 12, y: 24 }, { x: 12, y: 23 }, { x: 12, y: 22 }, { x: 12, y: 21 }, { x: 12, y: 20 }, { x: 12, y: 19 }, { x: 12, y: 18 }] })
+    this.game.snakes.push({ id: 'p4', color: 'gold', isAlive: true, body: [{ x: 24, y: 12 }, { x: 23, y: 12 }, { x: 22, y: 12 }, { x: 21, y: 12 }, { x: 20, y: 12 }, { x: 19, y: 12 }, { x: 18, y: 12 }] })
 
     if(reinitPlayers) {
-      this.players = [new Player(), new Player()]
+      this.players = [new Player(), new Player(), new Player(), new Player()]
       this.players[0].init('p1')
       this.players[1].init('p2')
+      this.players[2].init('p3')
+      this.players[3].init('p4')
     }
 
     this.seedRandomApples(25)
@@ -190,7 +194,7 @@ export class AppComponent implements OnInit, OnDestroy {
     })
 
     this.game.apples.forEach(apple => {
-      this.grid[apple.x][apple.y] = { color: 'red' }
+      this.grid[apple.x][apple.y] = { color: 'darkred' }
     })
   }
 
