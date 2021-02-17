@@ -90,15 +90,17 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  reset() {
+  reset(reinitPlayers = false) {
     this.game.snakes = []
     this.game.apples = []
     this.game.snakes.push({ id: 'p1', color: 'cyan', isAlive: true, body: [{ x: 0, y: 12 }, { x: 1, y: 12 }, { x: 2, y: 12 }, { x: 3, y: 12 }, { x: 4, y: 12 }, { x: 5, y: 12 }, { x: 6, y: 12 }] })
     this.game.snakes.push({ id: 'p2', color: 'pink', isAlive: true, body: [{ x: 0, y: 2 }, { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }, { x: 5, y: 2 }, { x: 6, y: 2 }] })
 
-    this.players = [new Player(), new Player()]
-    this.players[0].init('p1')
-    this.players[1].init('p2')
+    if(reinitPlayers) {
+      this.players = [new Player(), new Player()]
+      this.players[0].init('p1')
+      this.players[1].init('p2')
+    }
 
     this.seedRandomApples(25)
     // this.snake = []
@@ -223,7 +225,7 @@ export class AppComponent implements OnInit, OnDestroy {
           break
       }
     })
-    this.reset()
+    this.reset(true)
   }
 
   loadPlayer(e, playerIndex:number) {
