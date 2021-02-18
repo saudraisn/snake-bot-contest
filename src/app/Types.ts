@@ -23,11 +23,6 @@ export interface GameMove {
 
 export type Direction = 'LEFT' | 'RIGHT' | 'DOWN' | 'UP'
 
-export interface GridCell {
-  color?: string
-  img?: string
-}
-
 export interface Snake {
   id:string
   isAlive: boolean
@@ -35,4 +30,12 @@ export interface Snake {
   color: string
 }
 
-type Game = GameState[]
+
+// Types the player class doesn't need
+
+export type Game = GameState[]
+
+export interface GridCell {
+  color?: string
+  img?: string
+}

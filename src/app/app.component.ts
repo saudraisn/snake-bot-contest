@@ -2,8 +2,8 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { last, cloneDeep } from 'lodash'
 import { getRandomPos, isEqual } from './helpers';
 import { Player } from './Player';
+import { compileTs } from './TsCompile';
 import { Direction, GameMove, GameState, GridCell, Position } from './Types';
-
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -40,6 +40,16 @@ export class AppComponent implements OnInit, OnDestroy {
     // Bypass with manual mode
     // moves[0].move = this.commands
 
+
+    // TODO: this is buggy, the order of execution causes some snakes to have an advantage over others
+    // Here's how it should be done :
+    // 1) move evaluation/fetching
+    // Move validity analysis
+    // 2) valid moves execution
+    // 3) death detection
+    // 4) apple eating
+    // Points calculation in between for all steps
+    
     moves.forEach((move, index) => {
       if (!move) {
         // TODO: Kill snake, because he didn't return a valid move.
@@ -194,7 +204,7 @@ export class AppComponent implements OnInit, OnDestroy {
     })
 
     this.game.apples.forEach(apple => {
-      this.grid[apple.x][apple.y] = { color: 'darkred' }
+      this.grid[apple.x][apple.y] = { img: 'https://i.pinimg.com/originals/17/b0/28/17b02860355b8ee475d8d2190fee7e83.png' }
     })
   }
 
@@ -237,9 +247,12 @@ export class AppComponent implements OnInit, OnDestroy {
       if(file) {
         let fileReader = new FileReader();
         fileReader.onload = (e) => {
-          console.log(fileReader.result);
-  
-          const p1 = eval(fileReader.result as string)
+          const fileContent = fileReader.result as string
+          // console.log(fileReader.result);
+          // console.log('TS: ')
+          let compiled = compileTs(fileContent)
+          const p1 = eval(compiled)
+          
           console.log('Loaded player: ', p1)
           this.players[playerIndex] = p1
           this.players[playerIndex].id = this.game.snakes[playerIndex].id
