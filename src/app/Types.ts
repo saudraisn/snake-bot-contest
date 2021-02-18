@@ -4,8 +4,8 @@ export interface Position {
 }
 
 export interface GameState {
-  W:number
-  H:number
+  W: number
+  H: number
   snakes: Snake[]
   apples: Position[]
 }
@@ -24,10 +24,13 @@ export interface GameMove {
 export type Direction = 'LEFT' | 'RIGHT' | 'DOWN' | 'UP'
 
 export interface Snake {
-  id:string
+  id: string
   isAlive: boolean
   body: Position[]
   color: string
+  teamName: string
+  score: number
+  teamLogo?: string
 }
 
 

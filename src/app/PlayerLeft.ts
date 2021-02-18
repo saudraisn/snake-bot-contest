@@ -34,8 +34,8 @@ export interface Snake {
 class Player implements PlayerInfo {
   id:string // this will be set by the game to assign a snake to each of the players
 
-  teamName = '' // Set your team name here
-  snakeColor = '' // Set your snake color here, must be a valid css color name or hexa color code. ex : #FAFAFA
+  teamName = 'Player Left' // Set your team name here
+  snakeColor = 'red' // Set your snake color here, must be a valid css color name or hexa color code. ex : #FAFAFA
   deadImg = '' // An image url to display when your snake is dead
   teamLogo = '' // An image url for displaying your team logo
 
@@ -45,7 +45,7 @@ class Player implements PlayerInfo {
     // TODO: Implement logic to determine the snake's next move
     // this function is called once per game iteration (every time the snake moves) 
 
-    return {move : 'RIGHT'}
+    return {move : 'LEFT'}
   }
 }
 

@@ -2,12 +2,13 @@ import { last } from "lodash";
 import { isEqual, randomElem } from "./helpers";
 import { GameState, GameMove, PlayerInfo, Position } from "./Types";
 
-export class Player {
-  id
-  // A player is being passed a unique Id at the beginning of the game
-  init(id: string): PlayerInfo {
-    this.id = id
-    return null
+export class DummyPlayer implements PlayerInfo {
+  teamName: string = 'Dummy Player'
+  teamLogo?: string = ''
+  deadImg?: string;
+
+  constructor(public id = 'p1', public snakeColor = 'aquamarine') {
+
   }
 
   nextStep(game: GameState): GameMove {
@@ -25,16 +26,16 @@ export class Player {
     if (this.validatePos(up, game)) {
       possibleMoves.push({ move: 'UP' })
     }
-    if (this.validatePos(down, game)) {
-      possibleMoves.push({ move: 'DOWN' })
-    }
     if (this.validatePos(left, game)) {
       possibleMoves.push({ move: 'LEFT' })
+    }
+    if (this.validatePos(down, game)) {
+      possibleMoves.push({ move: 'DOWN' })
     }
     if (this.validatePos(right, game)) {
       possibleMoves.push({ move: 'RIGHT' })
     }
-    return randomElem(possibleMoves) || {move : 'RIGHT'}
+    return randomElem(possibleMoves)|| {move : 'RIGHT'}
   }
 
   validatePos(pos: Position, game: GameState) {
