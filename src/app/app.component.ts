@@ -10,7 +10,7 @@ import { Direction, GameMove, GameState, GridCell, Position } from './Types';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit, OnDestroy {
-  title = 'snake';
+  title = 'snake bot competition';
 
   W = 25
   H = 25
@@ -25,6 +25,8 @@ export class AppComponent implements OnInit, OnDestroy {
     snakes: [],
     apples: []
   }
+
+  fullGame: GameState[] = []
 
   grid: GridCell[][] = []
   interval: number;
@@ -82,8 +84,13 @@ export class AppComponent implements OnInit, OnDestroy {
         // this.gameOver = true
         // snake.body=[]
         snake.isAlive = false
+        // TODO: End game if no more snake are alive
+        
       }
     })
+
+    this.fullGame.push(cloneDeep(this.game))
+    console.log('Game length', this.fullGame.length)
 
     //Game rendering
     this.render()
@@ -108,7 +115,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (reinitPlayers) {
       this.players = [new DummyPlayer('p1', 'deepskyblue'), new DummyPlayer('p2', 'crimson'), new DummyPlayer('p3', 'mediumaquamarine'), new DummyPlayer('p4', 'gold')]
     }
-
+    this.fullGame = []
     this.game.snakes = []
     this.game.apples = []
 
@@ -120,7 +127,7 @@ export class AppComponent implements OnInit, OnDestroy {
     ]
 
     this.players.forEach((p, i) => {
-      this.game.snakes.push({ id: p.id, color: p.snakeColor , isAlive: true, body: snakeBodies[i], score: 0, teamName: p.teamName, teamLogo: '' })
+      this.game.snakes.push({ id: p.id, color: p.snakeColor, isAlive: true, body: snakeBodies[i], score: 0, teamName: p.teamName, teamLogo: '' })
     })
 
     this.seedRandomApples(25)
@@ -262,7 +269,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
         console.log('Loaded player: ', loadedPlayer)
         this.players[playerIndex] = loadedPlayer
-        this.players[playerIndex].id = `p${playerIndex+1}`
+        this.players[playerIndex].id = `p${playerIndex + 1}`
       }
       fileReader.readAsText(file);
     } else {
