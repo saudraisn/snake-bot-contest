@@ -312,7 +312,7 @@ export class AppComponent implements OnInit, OnDestroy {
         // console.log(fileReader.result);
         // console.log('TS: ')
         let compiled = compileTs(fileContent)
-        const loadedPlayer = eval(compiled)
+        const loadedPlayer: PlayerInfo = eval(compiled)
 
         console.log('Loaded player: ', loadedPlayer)
         this.players[playerIndex] = loadedPlayer
@@ -320,6 +320,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
         this.game.snakes[playerIndex].color = loadedPlayer.snakeColor
         this.game.snakes[playerIndex].teamName = loadedPlayer.teamName
+        this.game.snakes[playerIndex].teamLogo = loadedPlayer.teamLogo
         this.render()
       }
       fileReader.readAsText(file);
