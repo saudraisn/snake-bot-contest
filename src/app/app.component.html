@@ -28,6 +28,11 @@
     flex-direction: column;
   }
 
+  .file-inputs {
+    display: flex;
+    flex-direction: column;
+  }
+
   .player {
     margin:10px;
   }
@@ -86,10 +91,14 @@
           <div class="player-score" style="margin-left: 5px; font-size: 24px;">{{snake.score}}</div>
         </div>
       </div>
-      <input style="margin: 3px; margin-top: 20px;" type="file" (change)="loadPlayer($event, 0)" name="p1">
-      <input style="margin: 3px;" type="file" (change)="loadPlayer($event, 1)" name="p2">
-      <input style="margin: 3px;" type="file" (change)="loadPlayer($event, 2)" name="p3">
-      <input style="margin: 3px;" type="file" (change)="loadPlayer($event, 3)" name="p4">
+      <div class="file-inputs" style="margin-top: 20px;">
+        <input style="margin: 3px;" type="file" (change)="loadPlayer($event, 0)" name="p1">
+        <input style="margin: 3px;" type="file" (change)="loadPlayer($event, 1)" name="p2">
+        <input style="margin: 3px;" type="file" (change)="loadPlayer($event, 2)" name="p3">
+        <input style="margin: 3px;" type="file" (change)="loadPlayer($event, 3)" name="p4">
+        <input style="margin: 3px;" type="file" (change)="loadPlayer($event, 4)" name="p5">
+        <input style="margin: 3px;" type="file" (change)="loadPlayer($event, 5)" name="p6">
+      </div>
     </div>
 
   </div>

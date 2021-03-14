@@ -2,12 +2,11 @@ import { last } from "lodash";
 import { isEqual, randomElem } from "./helpers";
 import { GameState, GameMove, PlayerInfo, Position } from "./Types";
 
-export class DummyPlayer implements PlayerInfo {
-  teamName: string = 'Dummy Player'
+export class PlayerBot implements PlayerInfo {
   teamLogo?: string = ''
   deadImg?: string;
 
-  constructor(public id = 'p1', public snakeColor = 'aquamarine') {
+  constructor(public id = 'p1', public snakeColor = 'aquamarine', public teamName: string = 'Dummy Player') {
 
   }
 
@@ -35,14 +34,14 @@ export class DummyPlayer implements PlayerInfo {
     if (this.validatePos(right, game)) {
       possibleMoves.push({ move: 'RIGHT' })
     }
-    return randomElem(possibleMoves)|| {move : 'RIGHT'}
+    return randomElem(possibleMoves) || { move: 'RIGHT' }
   }
 
   validatePos(pos: Position, game: GameState) {
 
     let valid = true
 
-    if(pos.x < 0 || pos.y < 0 || pos.x >= game.W || pos.y >= game.H) {
+    if (pos.x < 0 || pos.y < 0 || pos.x >= game.W || pos.y >= game.H) {
       return false
     }
 

@@ -11,10 +11,12 @@ export interface GameState {
 }
 
 export interface PlayerInfo {
+  id: string
   teamName: string
   snakeColor?: string
   deadImg?: string
   teamLogo?: string
+  nextStep(game: GameState): GameMove
 }
 
 export interface GameMove {

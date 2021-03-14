@@ -1,9 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { last, cloneDeep, shuffle } from 'lodash'
 import { getRandomPos, isEqual } from './helpers';
-import { DummyPlayer } from './Player';
+import { PlayerBot } from './PlayerBot';
 import { compileTs } from './TsCompile';
-import { Direction, GameMove, GameState, GridCell, Position } from './Types';
+import { Direction, GameMove, GameState, GridCell, PlayerInfo, Position } from './Types';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -12,11 +12,11 @@ import { Direction, GameMove, GameState, GridCell, Position } from './Types';
 export class AppComponent implements OnInit, OnDestroy {
   title = 'snake bot competition';
 
-  W = 25
-  H = 25
-  NbPlayers = 4;
+  W = 27
+  H = 27
+  NbPlayers = 6;
 
-  players = [new DummyPlayer(), new DummyPlayer(), new DummyPlayer(), new DummyPlayer()]
+  players: PlayerInfo[] = []
   moves: GameMove[] = []
   gameOver = false
   game: GameState = {
@@ -54,13 +54,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.players.forEach((player) => {
       const move = player.nextStep(cloneDeep(this.game))
+      const snake = this.game.snakes.find(s => s.id === player.id)
 
+      // Player move validation
       if (!move) {
-        // TODO: Kill snake, because he didn't return a valid move.
+        snake.isAlive = false
         return
       }
 
-      const snake = this.game.snakes.find(s => s.id === player.id)
       const command = move.move
       if (!snake.isAlive) {
         return
@@ -84,16 +85,25 @@ export class AppComponent implements OnInit, OnDestroy {
         // this.gameOver = true
         // snake.body=[]
         snake.isAlive = false
-        // TODO: End game if no more snake are alive
-        
       }
     })
 
     this.fullGame.push(cloneDeep(this.game))
     console.log('Game length', this.fullGame.length)
-
+    if (this.game.snakes.every(s => !s.isAlive)) {
+      console.log('STOPPING GAME')
+      this.stop()
+      this.displayGameResults()
+    }
     //Game rendering
     this.render()
+  }
+
+  displayGameResults() {
+    const snakes = cloneDeep(this.game.snakes).sort((a, b) => b.score - a.score)
+    setTimeout(() => {
+      alert(snakes.map((s, i) => `${i + 1} : ${s.teamName} (${s.score} pts.)\n`).join(''))
+    }, 0);
   }
 
   getNextPos(pos: Position, command: Direction) {
@@ -113,18 +123,35 @@ export class AppComponent implements OnInit, OnDestroy {
 
   reset(reinitPlayers = false) {
     if (reinitPlayers) {
-      this.players = [new DummyPlayer('p1', 'deepskyblue'), new DummyPlayer('p2', 'crimson'), new DummyPlayer('p3', 'mediumaquamarine'), new DummyPlayer('p4', 'gold')]
+      this.players = [
+        new PlayerBot('p1', '#8c8c8c', 'Bot 1'),
+        new PlayerBot('p2', 'crimson', 'Bot 2'),
+        new PlayerBot('p3', '#0e9647', 'Bot 3'),
+        new PlayerBot('p4', 'gold', 'Bot 4'),
+        new PlayerBot('p5', '#1ec9c4', 'Bot 5'),
+        new PlayerBot('p6', '#bf24b0', 'Bot 6'),
+      ]
     }
     this.fullGame = []
     this.game.snakes = []
     this.game.apples = []
 
     const snakeBodies = [
-      [{ x: 12, y: 0 }, { x: 12, y: 1 }, { x: 12, y: 2 }, { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 }, { x: 12, y: 6 }],
-      [{ x: 24, y: 12 }, { x: 23, y: 12 }, { x: 22, y: 12 }, { x: 21, y: 12 }, { x: 20, y: 12 }, { x: 19, y: 12 }, { x: 18, y: 12 }],
-      [{ x: 12, y: 24 }, { x: 12, y: 23 }, { x: 12, y: 22 }, { x: 12, y: 21 }, { x: 12, y: 20 }, { x: 12, y: 19 }, { x: 12, y: 18 }],
-      [{ x: 0, y: 12 }, { x: 1, y: 12 }, { x: 2, y: 12 }, { x: 3, y: 12 }, { x: 4, y: 12 }, { x: 5, y: 12 }, { x: 6, y: 12 }],
+      // 4 player game
+      // [{ x: 12, y: 0 }, { x: 12, y: 1 }, { x: 12, y: 2 }, { x: 12, y: 3 }, { x: 12, y: 4 }, { x: 12, y: 5 }, { x: 12, y: 6 }],
+      // [{ x: 24, y: 12 }, { x: 23, y: 12 }, { x: 22, y: 12 }, { x: 21, y: 12 }, { x: 20, y: 12 }, { x: 19, y: 12 }, { x: 18, y: 12 }],
+      // [{ x: 12, y: 24 }, { x: 12, y: 23 }, { x: 12, y: 22 }, { x: 12, y: 21 }, { x: 12, y: 20 }, { x: 12, y: 19 }, { x: 12, y: 18 }],
+      // [{ x: 0, y: 12 }, { x: 1, y: 12 }, { x: 2, y: 12 }, { x: 3, y: 12 }, { x: 4, y: 12 }, { x: 5, y: 12 }, { x: 6, y: 12 }],
+      // 6 player game
+      [{ x: 4, y: 0 }, { x: 4, y: 1 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 4, y: 5 }, { x: 4, y: 6 }],
+      [{ x: 13, y: 0 }, { x: 13, y: 1 }, { x: 13, y: 2 }, { x: 13, y: 3 }, { x: 13, y: 4 }, { x: 13, y: 5 }, { x: 13, y: 6 }],
+      [{ x: 22, y: 0 }, { x: 22, y: 1 }, { x: 22, y: 2 }, { x: 22, y: 3 }, { x: 22, y: 4 }, { x: 22, y: 5 }, { x: 22, y: 6 }],
+      [{ x: 4, y: 26 }, { x: 4, y: 25 }, { x: 4, y: 24 }, { x: 4, y: 23 }, { x: 4, y: 22 }, { x: 4, y: 21 }, { x: 4, y: 20 }],
+      [{ x: 13, y: 26 }, { x: 13, y: 25 }, { x: 13, y: 24 }, { x: 13, y: 23 }, { x: 13, y: 22 }, { x: 13, y: 21 }, { x: 13, y: 20 }],
+      [{ x: 22, y: 26 }, { x: 22, y: 25 }, { x: 22, y: 24 }, { x: 22, y: 23 }, { x: 22, y: 22 }, { x: 22, y: 21 }, { x: 22, y: 20 }],
     ]
+
+
 
     this.players.forEach((p, i) => {
       this.game.snakes.push({ id: p.id, color: p.snakeColor, isAlive: true, body: snakeBodies[i], score: 0, teamName: p.teamName, teamLogo: '' })
@@ -138,7 +165,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   seedRandomApples(amount: number) {
-
     let i = 0
 
     while (i < amount) {
@@ -232,7 +258,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-
     // // FOR live player
     document.addEventListener('keydown', e => {
       console.log('PRESSED : ', e.key)
@@ -270,11 +295,15 @@ export class AppComponent implements OnInit, OnDestroy {
         console.log('Loaded player: ', loadedPlayer)
         this.players[playerIndex] = loadedPlayer
         this.players[playerIndex].id = `p${playerIndex + 1}`
+
+        this.game.snakes[playerIndex].color = loadedPlayer.snakeColor
+        this.game.snakes[playerIndex].teamName = loadedPlayer.teamName
+        this.render()
       }
       fileReader.readAsText(file);
     } else {
       console.log('New dummy player')
-      this.players[playerIndex] = new DummyPlayer()
+      this.players[playerIndex] = new PlayerBot()
       this.players[playerIndex].id = this.game.snakes[playerIndex].id
     }
   }
