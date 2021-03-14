@@ -16,6 +16,8 @@ export class AppComponent implements OnInit, OnDestroy {
   H = 27
   NbPlayers = 6;
 
+  appleSeed = 50
+
   players: PlayerInfo[] = []
   moves: GameMove[] = []
   gameOver = false
@@ -29,7 +31,9 @@ export class AppComponent implements OnInit, OnDestroy {
   fullGame: GameState[] = []
 
   grid: GridCell[][] = []
-  interval: number;
+  gameLoopInterval: number;
+  timeLeftInterval: number;
+  timeLeft:number = 5 * 60
   command: Direction;
 
   gameLoop() {
@@ -53,8 +57,19 @@ export class AppComponent implements OnInit, OnDestroy {
     // Points calculation in between for all steps
 
     this.players.forEach((player) => {
-      const move = player.nextStep(cloneDeep(this.game))
       const snake = this.game.snakes.find(s => s.id === player.id)
+
+      if (!snake.isAlive) {
+        return
+      }
+
+      let move: GameMove
+
+      try {
+        move = player.nextStep(cloneDeep(this.game))
+      } catch (error) {
+        console.error(`Error in nextStep function call for ${player.teamName} (${player.id})`, error)
+      }
 
       // Player move validation
       if (!move) {
@@ -63,10 +78,6 @@ export class AppComponent implements OnInit, OnDestroy {
       }
 
       const command = move.move
-      if (!snake.isAlive) {
-        return
-      }
-
       const head = last(snake.body)
       const pos = this.getNextPos(head, command)
 
@@ -90,6 +101,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.fullGame.push(cloneDeep(this.game))
     console.log('Game length', this.fullGame.length)
+
+    if(!this.game.apples.length) {
+      console.log('Seeding random apples')
+      this.seedRandomApples(1)
+    }
+
     if (this.game.snakes.every(s => !s.isAlive)) {
       console.log('STOPPING GAME')
       this.stop()
@@ -135,6 +152,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.fullGame = []
     this.game.snakes = []
     this.game.apples = []
+    this.timeLeft = 5 * 60
 
     const snakeBodies = [
       // 4 player game
@@ -157,7 +175,7 @@ export class AppComponent implements OnInit, OnDestroy {
       this.game.snakes.push({ id: p.id, color: p.snakeColor, isAlive: true, body: snakeBodies[i], score: 0, teamName: p.teamName, teamLogo: '' })
     })
 
-    this.seedRandomApples(25)
+    this.seedRandomApples(this.appleSeed)
     // this.snake = []
     // this.command = 'RIGHT'
     this.gameOver = false
@@ -202,12 +220,6 @@ export class AppComponent implements OnInit, OnDestroy {
       return false
     }
 
-
-    // if (this.snake.some(p => isEqual(p, pos))) {
-    //   console.log('Hit itself.')
-    //   return false
-    // }
-
     return valid
   }
 
@@ -249,12 +261,22 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   play() {
-    window.clearInterval(this.interval)
-    this.interval = window.setInterval(this.gameLoop.bind(this), 200)
+    window.clearInterval(this.gameLoopInterval)
+    this.gameLoopInterval = window.setInterval(this.gameLoop.bind(this), 200)
+    this.timeLeftInterval = window.setInterval(this.updateTime.bind(this), 1000)
+  }
+
+  updateTime() {
+    this.timeLeft--
+    if(this.timeLeft <= 0) {
+      this.stop()
+      this.displayGameResults()
+    }
   }
 
   stop() {
-    window.clearInterval(this.interval)
+    window.clearInterval(this.gameLoopInterval)
+    window.clearInterval(this.timeLeftInterval)
   }
 
   ngOnInit() {
@@ -309,6 +331,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    clearInterval(this.interval)
+    clearInterval(this.gameLoopInterval)
+    clearInterval(this.timeLeftInterval)
   }
 }

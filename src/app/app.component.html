@@ -42,9 +42,10 @@
     align-items: center;
   }
 
-  .buttons-row {
+  .center-row {
     display: flex;
     justify-content: center;
+    margin: 5px;
   }
 
   .player-cell {
@@ -59,11 +60,16 @@
 
   
 
-  <div class="buttons-row">
+  <div class="center-row">
     <button type="" style="margin: 3px;" (click)='play()'>PLAY</button>
     <button type="" style="margin: 3px;" (click)='gameLoop()'>LOOP 1</button>
     <button type="" style="margin: 3px;" (click)='stop()'>STOP</button>
     <button type="" style="margin: 3px;" (click)='reset()'>RESET</button>
+    <input type="numer" [(ngModel)]="appleSeed" name="appleseed">
+  </div>
+
+  <div class="center-row" style="font-size: 22px; font-weight: bold;">
+    Time left : {{timeLeft}} seconds
   </div>
 
   <div class="game-content" style="display: flex; justify-content: center;">
