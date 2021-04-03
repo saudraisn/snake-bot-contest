@@ -3,11 +3,14 @@ export interface Position {
   y: number
 }
 
+export type Wall = [Position, Position]
+
 export interface GameState {
   W: number
   H: number
   snakes: Snake[]
   apples: Position[]
+  walls: Wall[]
 }
 
 export interface PlayerInfo {
@@ -21,6 +24,7 @@ export interface PlayerInfo {
 
 export interface GameMove {
   move: Direction
+  placeWall?: Wall
 }
 
 export type Direction = 'LEFT' | 'RIGHT' | 'DOWN' | 'UP'
@@ -33,6 +37,7 @@ export interface Snake {
   teamName: string
   score: number
   teamLogo?: string
+  wallsLeft: number
 }
 
 

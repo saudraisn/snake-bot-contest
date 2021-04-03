@@ -3,7 +3,7 @@ import { last, cloneDeep, shuffle } from 'lodash'
 import { getRandomPos, isEqual } from './helpers';
 import { PlayerBot } from './PlayerBot';
 import { compileTs } from './TsCompile';
-import { Direction, GameMove, GameState, GridCell, PlayerInfo, Position } from './Types';
+import { Direction, GameMove, GameState, GridCell, PlayerInfo, Position, Wall } from './Types';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -17,15 +17,18 @@ export class AppComponent implements OnInit, OnDestroy {
   NbPlayers = 6;
 
   appleSeed = 50
+  wallsPerSnake = 3
 
   players: PlayerInfo[] = []
   moves: GameMove[] = []
   gameOver = false
+
   game: GameState = {
     W: this.W,
     H: this.H,
     snakes: [],
-    apples: []
+    apples: [],
+    walls: []
   }
 
   fullGame: GameState[] = []
@@ -33,8 +36,38 @@ export class AppComponent implements OnInit, OnDestroy {
   grid: GridCell[][] = []
   gameLoopInterval: number;
   timeLeftInterval: number;
-  timeLeft:number = 5 * 60
+  timeLeft: number = 5 * 60
   command: Direction;
+
+
+  distance(p1: Position, p2: Position) {
+    return Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y)
+  }
+
+  isBeside(p1: Position, p2: Position) {
+    return this.distance(p1, p2) === 1
+  }
+
+  isWallValid(w: Wall) {
+
+    let valid = true
+
+    if (w.length !== 2) {
+      return false
+    }
+
+    w.forEach(pos => {
+      if (!this.validadePos(pos, true)) {
+        valid = false
+      }
+    })
+
+    if (!this.isBeside(w[0], w[1])) {
+      return false
+    }
+
+    return valid
+  }
 
   gameLoop() {
     if (this.gameOver) {
@@ -77,6 +110,17 @@ export class AppComponent implements OnInit, OnDestroy {
         return
       }
 
+      if (move.placeWall) {
+        const wall = move.placeWall
+        if (snake.wallsLeft > 0 && this.isWallValid(wall)) {
+          this.game.walls.push(wall)
+          snake.wallsLeft--
+        } else {
+          snake.isAlive = false
+          return
+        }
+      }
+
       const command = move.move
       const head = last(snake.body)
       const pos = this.getNextPos(head, command)
@@ -85,6 +129,7 @@ export class AppComponent implements OnInit, OnDestroy {
         // snake eats an apple, do not remove one block
         snake.body.push(pos)
         this.game.apples = this.game.apples.filter(a => !isEqual(a, pos))
+
         snake.score += 10 + 1
       }
       else if (this.validadePos(pos)) {
@@ -97,15 +142,14 @@ export class AppComponent implements OnInit, OnDestroy {
         // snake.body=[]
         snake.isAlive = false
       }
+
+      if (!this.game.apples.length) {
+        this.seedRandomApples(1)
+      }
     })
 
     this.fullGame.push(cloneDeep(this.game))
     console.log('Game length', this.fullGame.length)
-
-    if(!this.game.apples.length) {
-      console.log('Seeding random apples')
-      this.seedRandomApples(1)
-    }
 
     if (this.game.snakes.every(s => !s.isAlive)) {
       console.log('STOPPING GAME')
@@ -152,6 +196,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.fullGame = []
     this.game.snakes = []
     this.game.apples = []
+    this.game.walls = []
     this.timeLeft = 5 * 60
 
     const snakeBodies = [
@@ -172,7 +217,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
 
     this.players.forEach((p, i) => {
-      this.game.snakes.push({ id: p.id, color: p.snakeColor, isAlive: true, body: snakeBodies[i], score: 0, teamName: p.teamName, teamLogo: '' })
+      this.game.snakes.push({ id: p.id, color: p.snakeColor, isAlive: true, body: snakeBodies[i], score: 0, teamName: p.teamName, teamLogo: p.teamLogo, wallsLeft: this.wallsPerSnake })
     })
 
     this.seedRandomApples(this.appleSeed)
@@ -202,7 +247,11 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.game.apples.some(apple => isEqual(apple, pos))
   }
 
-  validadePos(pos: Position) {
+  wallsContain(pos: Position) {
+    return this.game.walls.some(wall => wall.find(p => isEqual(pos, p)))
+  }
+
+  validadePos(pos: Position, checkApples = false) {
 
     let valid = true
 
@@ -211,12 +260,18 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     if (pos.x < 0 || pos.y < 0 || pos.x >= this.W || pos.y >= this.H) {
-      console.log('HIT A WALL!')
       return false
     }
 
     if (this.snakesContain(pos)) {
-      console.log('Hit a snake')
+      return false
+    }
+
+    if (this.wallsContain(pos)) {
+      return false
+    }
+
+    if(checkApples && this.applesContain(pos)) {
       return false
     }
 
@@ -258,6 +313,12 @@ export class AppComponent implements OnInit, OnDestroy {
     this.game.apples.forEach(apple => {
       this.grid[apple.x][apple.y] = { img: 'https://i.pinimg.com/originals/17/b0/28/17b02860355b8ee475d8d2190fee7e83.png' }
     })
+
+    this.game.walls.forEach(wall => {
+      wall.forEach(pos => {
+        this.grid[pos.x][pos.y] = {img : 'https://lh3.googleusercontent.com/proxy/0uOBZ-6o_AZ-O2jx0i68oqRjzjKvdipJPnTK083568WPrKq79Sskr5wh-S7Faos4IVB49gV85UyIogljBzMdzUsjEw'}
+      })
+    })
   }
 
   play() {
@@ -268,7 +329,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   updateTime() {
     this.timeLeft--
-    if(this.timeLeft <= 0) {
+    if (this.timeLeft <= 0) {
       this.stop()
       this.displayGameResults()
     }
@@ -309,8 +370,6 @@ export class AppComponent implements OnInit, OnDestroy {
       let fileReader = new FileReader();
       fileReader.onload = (e) => {
         const fileContent = fileReader.result as string
-        // console.log(fileReader.result);
-        // console.log('TS: ')
         let compiled = compileTs(fileContent)
         const loadedPlayer: PlayerInfo = eval(compiled)
 
