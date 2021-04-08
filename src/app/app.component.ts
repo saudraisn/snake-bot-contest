@@ -316,7 +316,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.game.walls.forEach(wall => {
       wall.forEach(pos => {
-        this.grid[pos.x][pos.y] = {img : 'https://lh3.googleusercontent.com/proxy/0uOBZ-6o_AZ-O2jx0i68oqRjzjKvdipJPnTK083568WPrKq79Sskr5wh-S7Faos4IVB49gV85UyIogljBzMdzUsjEw'}
+        this.grid[pos.x][pos.y] = {img : 'https://www.glengery.com/sites/default/files/aa154a388db64dd66057a2ddd3850390.jpg'}
       })
     })
   }
