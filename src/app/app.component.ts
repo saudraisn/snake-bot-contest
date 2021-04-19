@@ -151,7 +151,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.fullGame.push(cloneDeep(this.game))
     console.log('Game length', this.fullGame.length)
 
-    if (this.game.snakes.every(s => !s.isAlive)) {
+    // stop the game when only one snake alive
+    if (this.game.snakes.filter(s => s.isAlive).length === 1) {
       console.log('STOPPING GAME')
       this.stop()
       this.displayGameResults()
