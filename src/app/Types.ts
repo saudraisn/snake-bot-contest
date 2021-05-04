@@ -24,9 +24,9 @@ export interface PlayerInfo {
 
 export interface GameMove {
   move: Direction
-  placeWall?: Wall
-  reverse?: boolean
-  placeBanana?: Position
+  placeWall?: Wall // The position where you want to place the next wall, make sure you have some left!
+  reverse?: boolean // If you want to reverse your snake's body before applying your next move command
+  placeBanana?: Position // The position where you want to place the next banana, make sure you have some left!
 }
 
 export type Direction = 'LEFT' | 'RIGHT' | 'DOWN' | 'UP'
