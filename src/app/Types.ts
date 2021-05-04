@@ -25,6 +25,7 @@ export interface PlayerInfo {
 export interface GameMove {
   move: Direction
   placeWall?: Wall
+  reverse?: boolean
 }
 
 export type Direction = 'LEFT' | 'RIGHT' | 'DOWN' | 'UP'

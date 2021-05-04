@@ -129,6 +129,10 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       }
 
+      if(move.reverse) {
+        snake.body.reverse()
+      }
+
       const command = move.move
       const head = last(snake.body)
       const pos = this.getNextPos(head, command)
