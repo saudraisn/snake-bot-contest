@@ -1,9 +1,13 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { last, cloneDeep, shuffle } from 'lodash'
-import { getRandomPos, isEqual } from './helpers';
+import { isEqual, randomInt } from './helpers';
 import { PlayerBot } from './PlayerBot';
 import { compileTs } from './TsCompile';
-import { Direction, GameMove, GameState, GridCell, PlayerInfo, Position, Wall } from './Types';
+import { Direction, GameMove, GameState, GridCell, PlayerInfo, Position, Snake, Wall } from './Types';
+
+function pos(x: number, y: number): Position {
+  return { x, y }
+}
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -16,8 +20,12 @@ export class AppComponent implements OnInit, OnDestroy {
   H = 27
   NbPlayers = 6;
 
+  livesPerSnake = 3
   appleSeed = 50
-  wallsPerSnake = 3
+  minApplesAmount = 15
+  wallsPerSnake = 10
+  pointsPerApple = 15
+  pointsPerTurn = 0
 
   players: PlayerInfo[] = []
   moves: GameMove[] = []
@@ -106,7 +114,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
       // Player move validation
       if (!move) {
-        snake.isAlive = false
+        this.killSnake(snake)
         return
       }
 
@@ -116,7 +124,7 @@ export class AppComponent implements OnInit, OnDestroy {
           this.game.walls.push(wall)
           snake.wallsLeft--
         } else {
-          snake.isAlive = false
+          this.killSnake(snake)
           return
         }
       }
@@ -130,26 +138,25 @@ export class AppComponent implements OnInit, OnDestroy {
         snake.body.push(pos)
         this.game.apples = this.game.apples.filter(a => !isEqual(a, pos))
 
-        snake.score += 10 + 1
+        snake.score += this.pointsPerApple + this.pointsPerTurn
       }
       else if (this.validadePos(pos)) {
         snake.body.push(pos)
         snake.body.shift()
-        snake.score++
+        snake.score += this.pointsPerTurn
       } else {
-        console.log('GAME LOST for snake : ', snake.id)
-        // this.gameOver = true
-        // snake.body=[]
-        snake.isAlive = false
+        this.killSnake(snake)
+        return
       }
 
-      if (!this.game.apples.length) {
-        this.seedRandomApples(1)
+      if (this.game.apples.length < this.minApplesAmount) {
+        this.seedRandomApples(this.minApplesAmount - this.game.apples.length)
       }
     })
 
-    this.fullGame.push(cloneDeep(this.game))
-    console.log('Game length', this.fullGame.length)
+    // TODO: finish replay match feature
+    // this.fullGame.push(cloneDeep(this.game))
+    // console.log('Game length', this.fullGame.length)
 
     // stop the game when only one snake alive
     if (this.game.snakes.filter(s => s.isAlive).length === 1) {
@@ -161,11 +168,53 @@ export class AppComponent implements OnInit, OnDestroy {
     this.render()
   }
 
+  killSnake(snake: Snake) {
+    snake.isAlive = false
+    snake.livesLeft--
+
+    if (snake.livesLeft) {
+      snake.isAlive = true
+      snake.body = [this.getRandomEmptyCell()]
+    } else {
+      console.log(`Game lost for snake ${snake.id}`)
+    }
+
+    return snake
+  }
+
   displayGameResults() {
     const snakes = cloneDeep(this.game.snakes).sort((a, b) => b.score - a.score)
     setTimeout(() => {
       alert(snakes.map((s, i) => `${i + 1} : ${s.teamName} (${s.score} pts.)\n`).join(''))
     }, 0);
+  }
+
+  getRandomEmptyCell() {
+    let result = pos(randomInt(0, this.W - 1), randomInt(0, this.H - 1))
+
+    while (!this.validadePos(result, true)) {
+      result = this.incrementPosition(result)
+    }
+
+    return result
+  }
+
+  incrementPosition(pos: Position): Position {
+    let result: Position = cloneDeep(pos)
+
+    if (pos.x < (this.W - 1)) {
+      result.x++
+      return result
+    } else {
+      result.x = 0
+      if (pos.y < (this.H - 1)) {
+        result.y++
+      } else {
+        result.y = 0
+      }
+    }
+
+    return result
   }
 
   getNextPos(pos: Position, command: Direction) {
@@ -215,10 +264,8 @@ export class AppComponent implements OnInit, OnDestroy {
       [{ x: 22, y: 26 }, { x: 22, y: 25 }, { x: 22, y: 24 }, { x: 22, y: 23 }, { x: 22, y: 22 }, { x: 22, y: 21 }, { x: 22, y: 20 }],
     ]
 
-
-
     this.players.forEach((p, i) => {
-      this.game.snakes.push({ id: p.id, color: p.snakeColor, isAlive: true, body: snakeBodies[i], score: 0, teamName: p.teamName, teamLogo: p.teamLogo, wallsLeft: this.wallsPerSnake })
+      this.game.snakes.push({ id: p.id, color: p.snakeColor, isAlive: true, body: snakeBodies[i], score: 0, teamName: p.teamName, teamLogo: p.teamLogo, wallsLeft: this.wallsPerSnake, livesLeft: this.livesPerSnake })
     })
 
     this.seedRandomApples(this.appleSeed)
@@ -232,11 +279,9 @@ export class AppComponent implements OnInit, OnDestroy {
     let i = 0
 
     while (i < amount) {
-      const pos = getRandomPos(this.game.W, this.game.H)
-      if (!this.snakesContain(pos) && !this.applesContain(pos)) {
-        this.game.apples.push(pos)
-        i++
-      }
+      const pos = this.getRandomEmptyCell()
+      this.game.apples.push(pos)
+      i++
     }
   }
 
@@ -272,7 +317,7 @@ export class AppComponent implements OnInit, OnDestroy {
       return false
     }
 
-    if(checkApples && this.applesContain(pos)) {
+    if (checkApples && this.applesContain(pos)) {
       return false
     }
 
@@ -317,7 +362,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.game.walls.forEach(wall => {
       wall.forEach(pos => {
-        this.grid[pos.x][pos.y] = {img : 'https://www.glengery.com/sites/default/files/aa154a388db64dd66057a2ddd3850390.jpg'}
+        this.grid[pos.x][pos.y] = { img: 'https://www.glengery.com/sites/default/files/aa154a388db64dd66057a2ddd3850390.jpg' }
       })
     })
   }

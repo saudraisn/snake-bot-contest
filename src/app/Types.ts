@@ -38,6 +38,7 @@ export interface Snake {
   score: number
   teamLogo?: string
   wallsLeft: number
+  livesLeft: number
 }
 
 
