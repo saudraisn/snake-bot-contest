@@ -26,7 +26,7 @@ export interface GameMove {
   move: Direction
   placeWall?: Wall
   reverse?: boolean
-  banana?: Position
+  placeBanana?: Position
 }
 
 export type Direction = 'LEFT' | 'RIGHT' | 'DOWN' | 'UP'

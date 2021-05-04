@@ -44,7 +44,7 @@ export class PlayerBot implements PlayerInfo {
 
     return {
       ...(randomElem(possibleMoves) || { move: 'RIGHT' }),
-      banana: snake.bananasLeft ? this.getRandomEmptyCell() : undefined
+      placeBanana: snake.bananasLeft ? this.getRandomEmptyCell() : undefined
     }
   }
 

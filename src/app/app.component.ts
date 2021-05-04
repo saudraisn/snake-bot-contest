@@ -125,9 +125,9 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       }
 
-      if (move.banana) {
-        if (this.validatePos(move.banana, true) && snake.bananasLeft > 0) {
-          this.bananas.push(move.banana)
+      if (move.placeBanana) {
+        if (this.validatePos(move.placeBanana, true) && snake.bananasLeft > 0) {
+          this.bananas.push(move.placeBanana)
           snake.bananasLeft--
         } else {
           this.killSnake(snake)
