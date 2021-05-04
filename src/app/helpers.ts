@@ -18,6 +18,6 @@ export function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-export function randomElem(arr: any[]) {
+export function randomElem<T>(arr: T[]): T {
   return arr[randomInt(0, arr.length - 1)]
 }

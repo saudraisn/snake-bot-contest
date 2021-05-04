@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { last, cloneDeep, shuffle } from 'lodash'
-import { isEqual, randomInt } from './helpers';
+import { isEqual, randomElem, randomInt } from './helpers';
 import { PlayerBot } from './PlayerBot';
 import { compileTs } from './TsCompile';
 import { Direction, GameMove, GameState, GridCell, PlayerInfo, Position, Snake, Wall } from './Types';
@@ -20,12 +20,14 @@ export class AppComponent implements OnInit, OnDestroy {
   H = 27
   NbPlayers = 6;
 
-  livesPerSnake = 3
-  appleSeed = 50
-  minApplesAmount = 15
-  wallsPerSnake = 10
-  pointsPerApple = 15
-  pointsPerTurn = 0
+  livesPerSnake = 5
+  appleSeed = 100
+  minApplesAmount = 20
+  wallsPerSnake = 7
+  pointsPerApple = 20
+  pointsPerTurn = 1
+  bananasPerSnake = 15
+  slidesPerBanana = 5
 
   players: PlayerInfo[] = []
   moves: GameMove[] = []
@@ -38,6 +40,8 @@ export class AppComponent implements OnInit, OnDestroy {
     apples: [],
     walls: []
   }
+
+  bananas: Position[] = []
 
   fullGame: GameState[] = []
 
@@ -65,7 +69,7 @@ export class AppComponent implements OnInit, OnDestroy {
     }
 
     w.forEach(pos => {
-      if (!this.validadePos(pos, true)) {
+      if (!this.validatePos(pos, true)) {
         valid = false
       }
     })
@@ -82,21 +86,6 @@ export class AppComponent implements OnInit, OnDestroy {
       return true
     }
 
-    // const moves = this.players.map(p => )
-
-    // Bypass with manual mode
-    // moves[0].move = this.commands
-
-
-    // TODO: this is buggy, the order of execution causes some snakes to have an advantage over others
-    // Here's how it should be done :
-    // 1) move evaluation/fetching
-    // Move validity analysis
-    // 2) valid moves execution
-    // 3) death detection
-    // 4) apple eating
-    // Points calculation in between for all steps
-
     this.players.forEach((player) => {
       const snake = this.game.snakes.find(s => s.id === player.id)
 
@@ -107,7 +96,14 @@ export class AppComponent implements OnInit, OnDestroy {
       let move: GameMove
 
       try {
-        move = player.nextStep(cloneDeep(this.game))
+        if (snake.slideTurnsLeft) {
+          const head = last(snake.body)
+          const directions = this.getPossibleDirections(head)
+          move = randomElem(directions)
+          snake.slideTurnsLeft--
+        } else {
+          move = player.nextStep(cloneDeep({ ...this.game, apples: [...this.game.apples, ...this.bananas] }))
+        }
       } catch (error) {
         console.error(`Error in nextStep function call for ${player.teamName} (${player.id})`, error)
       }
@@ -129,7 +125,17 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       }
 
-      if(move.reverse) {
+      if (move.banana) {
+        if (this.validatePos(move.banana, true) && snake.bananasLeft > 0) {
+          this.bananas.push(move.banana)
+          snake.bananasLeft--
+        } else {
+          this.killSnake(snake)
+          return
+        }
+      }
+
+      if (move.reverse) {
         snake.body.reverse()
       }
 
@@ -143,8 +149,12 @@ export class AppComponent implements OnInit, OnDestroy {
         this.game.apples = this.game.apples.filter(a => !isEqual(a, pos))
 
         snake.score += this.pointsPerApple + this.pointsPerTurn
-      }
-      else if (this.validadePos(pos)) {
+      } else if (this.bananasContain(pos)) {
+        snake.slideTurnsLeft = this.slidesPerBanana
+        snake.body.push(pos)
+        this.bananas = this.bananas.filter(banana => !isEqual(banana, pos))
+        snake.score += this.pointsPerApple + this.pointsPerTurn
+      } else if (this.validatePos(pos)) {
         snake.body.push(pos)
         snake.body.shift()
         snake.score += this.pointsPerTurn
@@ -158,7 +168,9 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     })
 
-    // TODO: finish replay match feature
+    this.game.snakes.sort((a,b)=> b.score - a.score)
+
+    // TODO: complete the "replay match" feature
     // this.fullGame.push(cloneDeep(this.game))
     // console.log('Game length', this.fullGame.length)
 
@@ -170,6 +182,42 @@ export class AppComponent implements OnInit, OnDestroy {
     }
     //Game rendering
     this.render()
+  }
+
+  getPossibleDirections(pos:Position) {
+    const up = { x: pos.x, y: pos.y - 1 }
+    const down = { x: pos.x, y: pos.y + 1 }
+    const left = { x: pos.x - 1, y: pos.y }
+    const right = { x: pos.x + 1, y: pos.y }
+
+    let possibleMoves: GameMove[] = []
+
+    if (this.validatePos(up)) {
+      possibleMoves.push({ move: 'UP' })
+    }
+    if (this.validatePos(left)) {
+      possibleMoves.push({ move: 'LEFT' })
+    }
+    if (this.validatePos(down)) {
+      possibleMoves.push({ move: 'DOWN' })
+    }
+    if (this.validatePos(right)) {
+      possibleMoves.push({ move: 'RIGHT' })
+    }
+
+    return possibleMoves
+  }
+
+  getDirection(from: Position, to: Position): Direction {
+    if (to.x > from.x) {
+      return 'RIGHT'
+    } else if (to.x < from.x) {
+      return 'LEFT'
+    } else if (to.y > from.y) {
+      return 'DOWN'
+    } else {
+      return 'UP'
+    }
   }
 
   killSnake(snake: Snake) {
@@ -196,7 +244,7 @@ export class AppComponent implements OnInit, OnDestroy {
   getRandomEmptyCell() {
     let result = pos(randomInt(0, this.W - 1), randomInt(0, this.H - 1))
 
-    while (!this.validadePos(result, true)) {
+    while (!this.validatePos(result, true)) {
       result = this.incrementPosition(result)
     }
 
@@ -269,10 +317,24 @@ export class AppComponent implements OnInit, OnDestroy {
     ]
 
     this.players.forEach((p, i) => {
-      this.game.snakes.push({ id: p.id, color: p.snakeColor, isAlive: true, body: snakeBodies[i], score: 0, teamName: p.teamName, teamLogo: p.teamLogo, wallsLeft: this.wallsPerSnake, livesLeft: this.livesPerSnake })
+      this.game.snakes.push({
+        id: p.id,
+        teamName: p.teamName,
+        teamLogo: p.teamLogo,
+        color: p.snakeColor,
+        isAlive: true,
+        body: snakeBodies[i],
+        score: 0,
+        wallsLeft: this.wallsPerSnake,
+        livesLeft: this.livesPerSnake,
+        bananasLeft: this.bananasPerSnake,
+        slideTurnsLeft: 0
+      })
     })
 
     this.seedRandomApples(this.appleSeed)
+    this.bananas = []
+
     // this.snake = []
     // this.command = 'RIGHT'
     this.gameOver = false
@@ -297,11 +359,15 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.game.apples.some(apple => isEqual(apple, pos))
   }
 
+  bananasContain(pos: Position) {
+    return this.bananas.some(banana => isEqual(banana, pos))
+  }
+
   wallsContain(pos: Position) {
     return this.game.walls.some(wall => wall.find(p => isEqual(pos, p)))
   }
 
-  validadePos(pos: Position, checkApples = false) {
+  validatePos(pos: Position, checkFruits = false) {
 
     let valid = true
 
@@ -321,7 +387,7 @@ export class AppComponent implements OnInit, OnDestroy {
       return false
     }
 
-    if (checkApples && this.applesContain(pos)) {
+    if (checkFruits && (this.applesContain(pos) || this.bananasContain(pos))) {
       return false
     }
 
@@ -350,23 +416,27 @@ export class AppComponent implements OnInit, OnDestroy {
       if (!snake.isAlive) {
         this.grid[head.x][head.y] = {
           color: snake.color,
-          img: 'https://image.flaticon.com/icons/png/512/2027/2027275.png'
+          img: '../assets/dead.png'
         }
       } else {
         this.grid[head.x][head.y] = {
           color: snake.color,
-          img: 'https://image.flaticon.com/icons/png/512/25/25361.png'
+          img: '../assets/smile.png'
         }
       }
     })
 
     this.game.apples.forEach(apple => {
-      this.grid[apple.x][apple.y] = { img: 'https://i.pinimg.com/originals/17/b0/28/17b02860355b8ee475d8d2190fee7e83.png' }
+      this.grid[apple.x][apple.y] = { img: '../assets/apple.png' }
+    })
+
+    this.bananas.forEach(banana => {
+      this.grid[banana.x][banana.y] = { img: '../assets/bananas.png' }
     })
 
     this.game.walls.forEach(wall => {
       wall.forEach(pos => {
-        this.grid[pos.x][pos.y] = { img: 'https://www.glengery.com/sites/default/files/aa154a388db64dd66057a2ddd3850390.jpg' }
+        this.grid[pos.x][pos.y] = { img: '../assets/wall.jpeg' }
       })
     })
   }
